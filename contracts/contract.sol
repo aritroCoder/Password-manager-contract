@@ -30,7 +30,7 @@ contract PasswordManager{
         bytes32 merkleRoot = getMerkleRoot(temp);
         temp_sign[msg.sender] = Signature({merkleRoot: merkleRoot, signature: ""});
         // emit merkleroot
-        emit added_temp_credentials(merkleRoot);
+        emit added_temp_credentials(keccak256(abi.encodePacked(merkleRoot)));
     }
 
     function approveCredentials(bytes memory _signature) external returns(bool){
