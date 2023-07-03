@@ -1,3 +1,7 @@
+/**
+ *Submitted for verification at Etherscan.io on 2023-06-30
+*/
+
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
@@ -17,6 +21,8 @@ contract PasswordManager{
     mapping(address=>Signature) temp_sign;
 
     event added_temp_credentials(bytes32 merkleRoot);
+    event all_creds(Credential[] cred);
+    event cred(string website, string username, string password);
 
     function addCredentials(string memory _website, string memory _username, string memory _password) external {
         // recalculate merkle root => send merkleroot back => recieve signature => verify and add signature
@@ -44,24 +50,28 @@ contract PasswordManager{
         }
     }
 
-    function getAllCredentials() external returns (Credential[] memory){
+    function getAllCredentials() external{
         VerifySignature v = new VerifySignature();
         if(v.verify(msg.sender, signs[msg.sender].merkleRoot, signs[msg.sender].signature)){
-            return passwords[msg.sender]; 
+            emit all_creds(passwords[msg.sender]);
         }else{
             revert("Signature verification failed");
         }
     }
 
-    function getCredential(string memory _website) external returns (Credential memory){
+    function getCredential(string memory _website) external{
         VerifySignature v = new VerifySignature();
         if(v.verify(msg.sender, signs[msg.sender].merkleRoot, signs[msg.sender].signature)){
+            bool flag=false;
             for(uint i=0; i<passwords[msg.sender].length; i++){
                 if(keccak256(abi.encodePacked(passwords[msg.sender][i].website))==keccak256(abi.encodePacked(_website))){ // simple string comparison operation
-                    return passwords[msg.sender][i];
+                    emit cred(passwords[msg.sender][i].website, passwords[msg.sender][i].username, passwords[msg.sender][i].password);
+                    flag=true;
                 }
             }
-            revert("Credential not found for the website");
+            if(!flag){
+                revert("Credential not found for the website");
+            }
         }else{
             revert("Signature Verification failed");
         }
